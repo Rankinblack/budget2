@@ -12,6 +12,11 @@
    See SETUP.md for exactly where to find each value.
    ==================================================================== */
 window.APP_CONFIG = {
+  // DEMO MODE: login page + simulated payment, NO backend needed.
+  // Leave true to demo the full experience; set false (and fill the Supabase
+  // keys below) to go live. If Supabase keys are filled, cloud mode wins.
+  demoMode: true,
+
   // --- Supabase (Project Settings → API) ---
   supabaseUrl:      "",   // e.g. "https://abcd1234.supabase.co"
   supabaseAnonKey:  "",   // the "anon / public" key (safe to expose)

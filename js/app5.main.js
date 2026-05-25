@@ -142,7 +142,9 @@ function AuthScreen() {
     className: "text-[24px] font-semibold text-ink-900 mt-4"
   }, "\u0645\u064A\u0632\u0627\u0646\u064A\u062A\u064A"), /*#__PURE__*/React.createElement("p", {
     className: "text-sm text-ink-500 mt-1"
-  }, "\u0633\u062C\u0651\u0644 \u0627\u0644\u062F\u062E\u0648\u0644 \u0644\u062D\u0641\u0638 \u0645\u064A\u0632\u0627\u0646\u064A\u062A\u0643 \u0648\u0645\u062A\u0627\u0628\u0639\u0629 \u0623\u0634\u0647\u0631\u0643.")), /*#__PURE__*/React.createElement(Card, null, /*#__PURE__*/React.createElement("button", {
+  }, "\u0633\u062C\u0651\u0644 \u0627\u0644\u062F\u062E\u0648\u0644 \u0644\u062D\u0641\u0638 \u0645\u064A\u0632\u0627\u0646\u064A\u062A\u0643 \u0648\u0645\u062A\u0627\u0628\u0639\u0629 \u0623\u0634\u0647\u0631\u0643."), window.Backend.isDemo && /*#__PURE__*/React.createElement("p", {
+    className: "text-[11px] text-amber2-700 bg-amber2-50 border border-amber2-100 rounded-full px-3 py-1 mt-3"
+  }, "\u0648\u0636\u0639 \u062A\u062C\u0631\u064A\u0628\u064A \xB7 \u0627\u0633\u062A\u062E\u062F\u0645 \u0623\u064A \u0628\u0631\u064A\u062F \u0648\u0643\u0644\u0645\u0629 \u0645\u0631\u0648\u0631")), /*#__PURE__*/React.createElement(Card, null, /*#__PURE__*/React.createElement("button", {
     onClick: google,
     className: "w-full h-11 rounded-lg border border-sand-200 bg-white hover:bg-sand-50 flex items-center justify-center gap-3 text-[14px] text-ink-800 transition"
   }, /*#__PURE__*/React.createElement("svg", {
@@ -254,10 +256,12 @@ function UpgradeModal({
     className: "mt-5 flex items-center justify-between"
   }, /*#__PURE__*/React.createElement("div", {
     className: "text-[13px] text-ink-500"
-  }, CFG.proPriceLabel || 'دفعة واحدة', " \xB7 \u0648\u0635\u0648\u0644 \u062F\u0627\u0626\u0645")), /*#__PURE__*/React.createElement("button", {
+  }, CFG.proPriceLabel || 'دفعة واحدة', " \xB7 \u0648\u0635\u0648\u0644 \u062F\u0627\u0626\u0645")), window.Backend.isDemo && /*#__PURE__*/React.createElement("div", {
+    className: "mt-3 text-[11px] text-amber2-700 bg-amber2-50 border border-amber2-100 rounded-lg px-3 py-2"
+  }, "\u0648\u0636\u0639 \u062A\u062C\u0631\u064A\u0628\u064A: \xAB\u0627\u0644\u062A\u0631\u0642\u064A\u0629\xBB \u062A\u0641\u062A\u062D \u0627\u0644\u0645\u0632\u0627\u064A\u0627 \u0641\u0648\u0631\u0627\u064B \u0628\u062F\u0648\u0646 \u062F\u0641\u0639 \u062D\u0642\u064A\u0642\u064A."), /*#__PURE__*/React.createElement("button", {
     onClick: onUpgrade,
     className: "mt-3 w-full h-11 rounded-lg bg-teal-700 text-white font-medium hover:bg-teal-800 transition"
-  }, "\u0627\u0644\u062A\u0631\u0642\u064A\u0629 \u0627\u0644\u0622\u0646"), /*#__PURE__*/React.createElement("button", {
+  }, window.Backend.isDemo ? 'الترقية (تجريبي)' : 'الترقية الآن'), /*#__PURE__*/React.createElement("button", {
     onClick: onClose,
     className: "mt-2 w-full h-9 text-[13px] text-ink-500 hover:text-ink-700"
   }, "\u0644\u0627\u062D\u0642\u0627\u064B"))));
@@ -407,12 +411,14 @@ function App({
   onSignOut
 }) {
   const isCloud = window.Backend.isCloud;
+  const requiresAuth = window.Backend.requiresAuth;
+  const gatingOn = window.Backend.gating;
   const [route, setRoute] = useStateApp('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useStateApp(false);
   const [tweaks, setTweak] = window.useTweaks(TWEAK_DEFAULTS);
   const [profile, setProfile] = useStateApp(null);
   const [monthData, setMonthData] = useStateApp(null);
-  const [isPro, setIsPro] = useStateApp(!isCloud); // local mode = full access
+  const [isPro, setIsPro] = useStateApp(!gatingOn); // local mode = full access
   const [booted, setBooted] = useStateApp(false);
   const [upgrade, setUpgrade] = useStateApp({
     open: false,
@@ -426,7 +432,7 @@ function App({
     (async () => {
       const prof = await window.Backend.getProfile();
       const settings = prof && prof.settings || window.Backend.defaultSettings();
-      const pro = isCloud ? prof && prof.plan === 'pro' : true;
+      const pro = gatingOn ? prof && prof.plan === 'pro' : true;
       let md = await window.Backend.loadMonth(settings.year, settings.month);
       if (!md) {
         md = window.Backend.seedMonth();
@@ -595,14 +601,27 @@ function App({
   }, [tweaks.theme, tweaks.accent, tweaks.density]);
 
   // ── gating helper ──
-  const gated = key => isCloud && PROF[key] && !isPro;
+  const gated = key => gatingOn && PROF[key] && !isPro;
   const openUpgrade = feature => setUpgrade({
     open: true,
     feature
   });
   async function doUpgrade() {
     try {
-      await window.Backend.startCheckout();
+      const r = await window.Backend.startCheckout();
+      if (r && r.simulated) {
+        // demo mode: unlocked instantly
+        const pro = await window.Backend.isPro();
+        setIsPro(pro);
+        setProfile(p => ({
+          ...p,
+          plan: pro ? 'pro' : p.plan
+        }));
+        setUpgrade({
+          open: false,
+          feature: null
+        });
+      }
     } catch (e) {
       alert('تعذّر بدء الدفع: ' + (e.message || e));
     }
@@ -691,7 +710,7 @@ function App({
     en: 'Settings',
     icon: I.settings
   }];
-  if (isCloud) nav.push({
+  if (requiresAuth) nav.push({
     id: 'account',
     label: 'حسابي',
     en: 'Account',
@@ -838,7 +857,7 @@ function App({
   }, money.code), /*#__PURE__*/React.createElement("span", {
     className: "text-ink-400"
   }, "\xB7"), /*#__PURE__*/React.createElement("span", null, money.sym)), /*#__PURE__*/React.createElement("button", {
-    onClick: () => isCloud ? setRoute('account') : null,
+    onClick: () => requiresAuth ? setRoute('account') : null,
     className: "flex items-center gap-2.5",
     "aria-label": "\u0627\u0644\u062D\u0633\u0627\u0628"
   }, /*#__PURE__*/React.createElement("div", {
@@ -847,7 +866,7 @@ function App({
     className: "text-[12px] text-ink-900 font-medium leading-none"
   }, state.settings.name), /*#__PURE__*/React.createElement("div", {
     className: "text-[10px] text-ink-500 latin mt-0.5"
-  }, isCloud ? isPro ? 'Pro account' : 'Free account' : 'Local')), /*#__PURE__*/React.createElement("div", {
+  }, requiresAuth ? isPro ? 'Pro account' : 'Free account' : 'Local')), /*#__PURE__*/React.createElement("div", {
     className: "w-9 h-9 rounded-full bg-gradient-to-br from-teal-600 to-teal-800 text-white font-semibold flex items-center justify-center text-[13px] shrink-0"
   }, (state.settings.name || '؟').split(' ').map(s => s[0]).join('').slice(0, 2))))), /*#__PURE__*/React.createElement("div", {
     className: "max-w-[1400px] mx-auto px-4 md:px-8 py-5 md:py-7 pb-24 md:pb-7"
@@ -994,23 +1013,23 @@ function SidebarInsight({
 
 // ============== Root — auth gate ==============
 function Root() {
-  const isCloud = window.Backend.isCloud;
+  const requiresAuth = window.Backend.requiresAuth;
   const [ready, setReady] = useStateApp(false);
   const [user, setUser] = useStateApp(null);
   useEffectApp(() => {
     let off = () => {};
     (async () => {
       const u = await window.Backend.getUser();
-      setUser(isCloud ? u : u); // local: always a stub user
+      setUser(u);
       setReady(true);
-      if (isCloud) off = window.Backend.onAuthChange(async () => {
+      off = window.Backend.onAuthChange(async () => {
         setUser(await window.Backend.getUser());
       });
     })();
     return () => off();
   }, []);
   if (!ready) return /*#__PURE__*/React.createElement(Splash, null);
-  if (isCloud && !user) return /*#__PURE__*/React.createElement(AuthScreen, null);
+  if (requiresAuth && !user) return /*#__PURE__*/React.createElement(AuthScreen, null);
   return /*#__PURE__*/React.createElement(App, {
     key: user ? user.id : 'local',
     user: user,
