@@ -1,6 +1,6 @@
 /* Service Worker — ميزانيتي / My Budget PWA
    Cache-first app shell for full offline use. Bump CACHE to ship updates. */
-const CACHE = 'budget-pwa-v1';
+const CACHE = 'budget-pwa-v2';
 const ASSETS = [
   "./",
   "./index.html",
@@ -8,7 +8,10 @@ const ASSETS = [
   "./fonts.css",
   "./js/react.min.js",
   "./js/react-dom.min.js",
+  "./js/config.js",
+  "./js/supabase.umd.js",
   "./js/app1.seed.js",
+  "./js/backend.js",
   "./js/app2.components.js",
   "./js/app3.tweaks.js",
   "./js/app4.screens.js",

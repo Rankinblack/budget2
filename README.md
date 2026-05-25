@@ -41,8 +41,23 @@ Then open http://localhost:8080 in your browser.
 Budget data is saved in your browser's localStorage on the device. Use the gear
 button (bottom-left) → "البيانات" to Backup (JSON), Import, Reset, or Clear.
 
+## Accounts, history & payments (optional)
+
+The app runs in **Local mode** by default (no login, data in this browser,
+everything unlocked). To enable **Google/email login**, **per-user month
+history**, and a **one-time Pro unlock** via Stripe, follow **SETUP.md** — you
+fill in `js/config.js` and set up free Supabase + Stripe accounts. No code
+changes required.
+
+- Free (cloud mode): current-month budgeting — Dashboard, Income, Expenses,
+  Goals, Settings.
+- Pro (one-time payment): saved month history, JSON backup/export, the Annual
+  tracker, and the Debt-Snowball planner. Change the split in `config.js`.
+
 ## Notes / known limitations
 
-- The "إضافة بند" (add item) and header search controls are not yet wired up —
-  you can edit any amount inline, but adding/removing rows isn't implemented in
-  the original design. Happy to add this if you want it.
+- The "إضافة بند" (add row) buttons and the header search are decorative in the
+  original design — you can edit any amount inline, but adding/removing rows
+  isn't implemented yet. Happy to add this if you want it.
+- "Pro" gating is enforced server-side (Stripe webhook → Supabase), so it can't
+  be bypassed from the browser. In Local mode there's no gating at all.
